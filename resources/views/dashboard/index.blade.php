@@ -1,0 +1,1054 @@
+@extends('layouts.app')
+
+@section('content')
+<style>
+/* ================= HEADER ================= */
+.page-header {
+    margin-bottom: 2rem;
+    position: relative;
+}
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    right: -20px;
+    bottom: -20px;
+    background: linear-gradient(135deg, rgba(30, 58, 95, 0.05), rgba(30, 58, 95, 0.02));
+    border-radius: 1.5rem;
+    z-index: -1;
+}
+.header-content {
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
+    border-radius: 1rem;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(30, 58, 95, 0.1);
+}
+.title-text {
+    font-size: 1.75rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #1e293b, #1e3a5f);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    margin-bottom: 0.5rem;
+}
+.header-content p {
+    margin: 0;
+    color: #64748b;
+}
+
+/* ================= GRID ================= */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.stat-card, .card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+.stat-card h3, .card h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #1e293b;
+}
+.stat-card h1 {
+    margin: 0;
+    font-size: 2.3rem;
+}
+.loading-placeholder {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b;
+}
+.loading-spinner {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #1e3a5f;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ================= PROGRESS ================= */
+.percent-text {
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #1e3a5f;
+}
+.progress-bar {
+    background: #e5e7eb;
+    height: 28px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    color: #fff;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    transition: all 0.8s ease;
+}
+
+/* ================= CHART ================= */
+.chart-container {
+    position: relative;
+    height: 350px;
+}
+
+/* ================= LOG ACTIVITY CARD ================= */
+.log-card {
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.log-header h3 {
+    color: #1e293b;
+    margin: 0;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.log-header h3 i {
+    color: #1e3a5f;
+}
+.filter-section {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.filter-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+.filter-btn {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 0.4rem 1rem;
+    border-radius: 2rem;
+    color: #475569;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.filter-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+.filter-btn.active {
+    background: #1e3a5f;
+    color: #fff;
+    border-color: #1e3a5f;
+}
+.per-page-select {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    color: #475569;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+.per-page-select option {
+    background: #fff;
+    color: #1e293b;
+}
+.refresh-log-btn {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.refresh-log-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+.log-table-container {
+    overflow-x: auto;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+}
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    min-width: 700px;
+}
+.log-table th {
+    text-align: left;
+    padding: 0.9rem 1rem;
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
+}
+.log-table td {
+    padding: 0.8rem 1rem;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+}
+.log-table tr:hover td {
+    background: #f8fafc;
+}
+.badge-log {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 2rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+.badge-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+.badge-danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+.badge-warning {
+    background: #fed7aa;
+    color: #92400e;
+    border: 1px solid #fed7aa;
+}
+.timestamp {
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.7rem;
+    color: #64748b;
+    white-space: nowrap;
+}
+.service-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+.last-check {
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.7rem;
+    color: #64748b;
+    white-space: nowrap;
+}
+.message-cell {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #475569;
+}
+.message-cell:hover {
+    white-space: normal;
+    word-break: break-word;
+    background: #fff;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+@media (max-width: 768px) {
+    .message-cell {
+        max-width: 150px;
+    }
+}
+.log-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* ================= PAGINATION ================= */
+.pagination-container {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.pagination-info {
+    color: #475569;
+    font-size: 0.85rem;
+}
+.pagination-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.pagination-btn {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+}
+.pagination-btn:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.page-number {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    color: #475569;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.page-number.active {
+    background: #1e3a5f;
+    color: #fff;
+    border-color: #1e3a5f;
+}
+.page-number:hover:not(.active) {
+    background: #e2e8f0;
+}
+.page-jump {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.page-jump span {
+    color: #475569;
+    font-size: 0.8rem;
+}
+.page-jump input {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.5rem;
+    color: #1e293b;
+    width: 60px;
+    text-align: center;
+}
+.page-jump input:focus {
+    outline: none;
+    border-color: #1e3a5f;
+}
+.page-jump button {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 0.3rem 0.8rem;
+    border-radius: 0.5rem;
+    color: #475569;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.page-jump button:hover {
+    background: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+    .title-text { font-size: 1.3rem; }
+    .chart-container { height: 260px; }
+    .log-header { flex-direction: column; align-items: stretch; }
+    .filter-section { justify-content: space-between; }
+    .filter-controls { justify-content: center; }
+    .pagination-container { flex-direction: column; text-align: center; }
+    .pagination-buttons { justify-content: center; }
+    .stat-card h1 { font-size: 1.8rem; }
+    .percent-text { font-size: 2rem; }
+}
+
+/* Status legend */
+.status-legend-dashboard {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+.status-legend-dashboard span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+.status-legend-dashboard .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dot-up { background: #10b981; }
+.dot-warning { background: #f59e0b; }
+.dot-down { background: #ef4444; }
+</style>
+
+<!-- ================= HEADER ================= -->
+<div class="page-header">
+    <div class="header-content">
+        <div class="title-text">
+            <i class="fas fa-chart-line"></i>
+            Dashboard Monitoring
+        </div>
+        <p>Ringkasan status service dan aktivitas sistem</p>
+        <div class="status-legend-dashboard">
+            <span><span class="dot dot-up"></span> UP - Normal</span>
+            <span><span class="dot dot-warning"></span> WARNING - Perlu Perhatian</span>
+            <span><span class="dot dot-down"></span> DOWN - Tidak Berfungsi</span>
+        </div>
+    </div>
+</div>
+
+<!-- ================= STATS ================= -->
+<div class="stats-grid" id="statsContainer">
+    <div class="stat-card">
+        <h3><i class="fas fa-server"></i> Total Services</h3>
+        <h1 id="totalValue">--</h1>
+        <small>Service terdaftar</small>
+    </div>
+
+    <div class="stat-card">
+        <h3><i class="fas fa-check-circle"></i> Services UP</h3>
+        <h1 id="upValue" style="color: #10b981">--</h1>
+        <small>Berjalan normal</small>
+    </div>
+
+    <div class="stat-card">
+        <h3><i class="fas fa-exclamation-triangle"></i> Services WARNING</h3>
+        <h1 id="warningValue" style="color: #f59e0b">--</h1>
+        <small>Perlu perhatian</small>
+    </div>
+
+    <div class="stat-card">
+        <h3><i class="fas fa-times-circle"></i> Services DOWN</h3>
+        <h1 id="downValue" style="color: #ef4444">--</h1>
+        <small>Perbaiki segera</small>
+    </div>
+</div>
+
+<!-- ================= UPTIME ================= -->
+<div class="card" id="uptimeContainer">
+    <h3><i class="fas fa-chart-line"></i> Uptime Rate Keseluruhan</h3>
+    <div class="percent-text" id="percentValue">--%</div>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill">
+            --%
+        </div>
+    </div>
+</div>
+
+<!-- ================= CHART ================= -->
+<div class="card">
+    <h3><i class="fas fa-chart-area"></i> Tren Uptime 7 Hari Terakhir</h3>
+    <div class="chart-container">
+        <canvas id="weeklyChart"></canvas>
+    </div>
+</div>
+
+<!-- ================= LOG ACTIVITY CARD ================= -->
+<div class="log-card">
+    <div class="log-header">
+        <h3>
+            <i class="fas fa-history"></i>
+            Log Aktivitas Monitoring
+        </h3>
+        <div class="filter-section">
+            <div class="filter-controls" id="logFilterGroup">
+                <button class="filter-btn active" data-filter="all">📊 Semua</button>
+                <button class="filter-btn" data-filter="UP">✅ UP</button>
+                <button class="filter-btn" data-filter="WARNING">⚠️ WARNING</button>
+                <button class="filter-btn" data-filter="DOWN">❌ DOWN</button>
+            </div>
+            <select id="perPageSelect" class="per-page-select">
+                <option value="10" selected>10 data</option>
+                <option value="20" >20 data</option>
+                <option value="50">50 data</option>
+                <option value="100">100 data</option>
+            </select>
+            <button class="refresh-log-btn" id="refreshLogBtn" title="Refresh Log">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="log-table-container">
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>Waktu Log (Status Berubah)</th>
+                    <th>Service</th>
+                    <th>Status Saat Ini</th>
+                    <th>Last Check</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody id="logTableBody">
+                <tr>
+                    <td colspan="5" class="log-empty">
+                        <div class="loading-spinner" style="width:20px;height:20px;"></div>
+                        Memuat log...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="pagination-container" id="paginationContainer">
+        <div class="pagination-info" id="paginationInfo">
+            Menampilkan 0 dari 0 entri
+        </div>
+        <div class="pagination-buttons" id="paginationButtons">
+            <button class="pagination-btn" id="firstPageBtn" disabled>« First</button>
+            <button class="pagination-btn" id="prevPageBtn" disabled>‹ Prev</button>
+            <div id="pageNumbers"></div>
+            <button class="pagination-btn" id="nextPageBtn" disabled>Next ›</button>
+            <button class="pagination-btn" id="lastPageBtn" disabled>Last »</button>
+            <div class="page-jump">
+                <span>Go to:</span>
+                <input type="number" id="pageJumpInput" min="1" value="1">
+                <button id="pageJumpBtn">Go</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let weeklyChart = null;
+let refreshInterval = null;
+let logRefreshInterval = null;
+let currentLogFilter = 'all';
+let allLogsData = [];
+let allServicesData = [];
+let currentPage = 1;
+let itemsPerPage = 10;
+
+// ===============================
+// CSRF TOKEN HELPER (Laravel Version)
+// ===============================
+function getCSRFToken() {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    if (metaTag) {
+        return metaTag.getAttribute('content');
+    }
+    
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith('XSRF-TOKEN=')) {
+                cookieValue = decodeURIComponent(cookie.substring(11));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// ===============================
+// LOAD SERVICES DATA (untuk last_checked)
+// ===============================
+async function loadServicesData() {
+    try {
+        const response = await fetch('/api/services', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                allServicesData = data;
+            } else if (data.data && Array.isArray(data.data)) {
+                allServicesData = data.data;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading services data:', error);
+    }
+}
+
+// ===============================
+// GET LAST CHECKED FOR SERVICE
+// ===============================
+function getLastChecked(serviceName) {
+    const service = allServicesData.find(s => s.name === serviceName);
+    if (service && service.last_checked) {
+        return new Date(service.last_checked).toLocaleString('id-ID');
+    }
+    return '-';
+}
+
+// ===============================
+// LOAD DASHBOARD DATA FROM API
+// ===============================
+async function loadDashboardData() {
+    try {
+        const response = await fetch('/api/dashboard', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+
+        if (response.status === 401) {
+            window.location.href = '/login';
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        updateDashboardUI(data);
+        
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        showErrorState();
+    }
+}
+
+// ===============================
+// UPDATE UI WITH DATA FROM API
+// ===============================
+function updateDashboardUI(data) {
+    document.getElementById('totalValue').innerText = data.total || 0;
+    document.getElementById('upValue').innerText = data.up || 0;
+    document.getElementById('warningValue').innerText = data.warning || 0;
+    document.getElementById('downValue').innerText = data.down || 0;
+    
+    const percent = data.percent || 0;
+    document.getElementById('percentValue').innerText = percent + '%';
+    
+    const progressFill = document.getElementById('progressFill');
+    progressFill.style.width = percent + '%';
+    progressFill.innerText = percent + '%';
+    
+    if (percent >= 90) {
+        progressFill.style.background = "linear-gradient(90deg, #06d6a0, #059669)";
+    } else if (percent >= 70) {
+        progressFill.style.background = "linear-gradient(90deg, #facc15, #eab308)";
+    } else {
+        progressFill.style.background = "linear-gradient(90deg, #ef4444, #dc2626)";
+    }
+    
+    if (data.labels && data.data) {
+        updateChart(data.labels, data.data);
+    }
+}
+
+// ===============================
+// UPDATE CHART
+// ===============================
+function updateChart(labels, dataValues) {
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+    
+    if (weeklyChart) {
+        weeklyChart.destroy();
+    }
+    
+    if (!labels || !dataValues || labels.length === 0) {
+        return;
+    }
+    
+    weeklyChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Uptime (%)",
+                data: dataValues,
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                borderColor: "#1e3a5f",
+                backgroundColor: "rgba(30, 58, 95, 0.1)",
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: "#1e3a5f",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8,
+                        color: "#1e293b"
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Uptime: ${context.parsed.y}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + "%";
+                        },
+                        color: "#64748b"
+                    },
+                    title: {
+                        display: true,
+                        text: "Uptime (%)",
+                        color: "#64748b"
+                    },
+                    grid: {
+                        color: "#e2e8f0"
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: "Hari",
+                        color: "#64748b"
+                    },
+                    ticks: {
+                        color: "#64748b"
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ===============================
+// LOAD LOG DATA FROM API
+// ===============================
+async function loadLogData() {
+    try {
+        await loadServicesData();
+        
+        const response = await fetch('/api/monitoring-logs?limit=500', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        allLogsData = data.logs || [];
+        currentPage = 1;
+        renderLogTable();
+        renderPagination();
+        
+    } catch (error) {
+        console.error('Error loading log data:', error);
+        const tbody = document.getElementById('logTableBody');
+        tbody.innerHTML = '<tr><td colspan="5" class="log-empty"><i class="fas fa-exclamation-triangle"></i> Gagal memuat log aktivitas</td></tr>';
+    }
+}
+
+// ===============================
+// RENDER LOG TABLE WITH LAST CHECK COLUMN
+// ===============================
+function renderLogTable() {
+    const tbody = document.getElementById('logTableBody');
+    
+    let filteredLogs = allLogsData;
+    if (currentLogFilter !== 'all') {
+        filteredLogs = allLogsData.filter(log => {
+            const logStatus = (log.status || '').toUpperCase();
+            if (currentLogFilter === 'UP') return logStatus === 'UP';
+            if (currentLogFilter === 'WARNING') return logStatus === 'WARNING';
+            if (currentLogFilter === 'DOWN') return logStatus === 'DOWN';
+            return true;
+        });
+    }
+    
+    if (filteredLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="log-empty"><i class="fas fa-inbox"></i> ${allLogsData.length === 0 ? 'Belum ada aktivitas monitoring' : 'Tidak ada log dengan filter ' + currentLogFilter}</td></tr>`;
+        document.getElementById('paginationInfo').innerHTML = 'Menampilkan 0 dari 0 entri';
+        return;
+    }
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedLogs = filteredLogs.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+    
+    let html = '';
+    paginatedLogs.forEach(log => {
+        const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleString('id-ID') : '-';
+        let badgeClass = '';
+        let statusText = '';
+        let statusIcon = '';
+        const logStatus = (log.status || '').toUpperCase();
+        
+        if (logStatus === 'UP') {
+            badgeClass = 'badge-success';
+            statusText = 'UP - Normal';
+            statusIcon = '✅';
+        } else if (logStatus === 'DOWN') {
+            badgeClass = 'badge-danger';
+            statusText = 'DOWN - Tidak Berfungsi';
+            statusIcon = '❌';
+        } else if (logStatus === 'WARNING') {
+            badgeClass = 'badge-warning';
+            statusText = 'WARNING - Perlu Perhatian';
+            statusIcon = '⚠️';
+        } else {
+            badgeClass = 'badge-warning';
+            statusText = log.status || 'UNKNOWN';
+            statusIcon = '❓';
+        }
+        
+        let message = log.message || '-';
+        const lastChecked = getLastChecked(log.service_name);
+        
+        html += `
+            <tr>
+                <td class="timestamp">${escapeHtml(timestamp)}</td>
+                <td class="service-name">${escapeHtml(log.service_name || '-')}</td>
+                <td><span class="badge-log ${badgeClass}">${statusIcon} ${escapeHtml(statusText)}</span></td>
+                <td class="last-check">🕐 ${escapeHtml(lastChecked)}</td>
+                <td class="message-cell" title="${escapeHtml(message)}">${escapeHtml(message)}</td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+    
+    const startNum = filteredLogs.length === 0 ? 0 : startIndex + 1;
+    const endNum = Math.min(endIndex, filteredLogs.length);
+    document.getElementById('paginationInfo').innerHTML = `Menampilkan ${startNum} - ${endNum} dari ${filteredLogs.length} entri`;
+    
+    return totalPages;
+}
+
+// ===============================
+// RENDER PAGINATION BUTTONS
+// ===============================
+function renderPagination() {
+    let filteredLogs = allLogsData;
+    if (currentLogFilter !== 'all') {
+        filteredLogs = allLogsData.filter(log => {
+            const logStatus = (log.status || '').toUpperCase();
+            if (currentLogFilter === 'UP') return logStatus === 'UP';
+            if (currentLogFilter === 'WARNING') return logStatus === 'WARNING';
+            if (currentLogFilter === 'DOWN') return logStatus === 'DOWN';
+            return true;
+        });
+    }
+    
+    const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+    
+    const firstBtn = document.getElementById('firstPageBtn');
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+    const lastBtn = document.getElementById('lastPageBtn');
+    
+    firstBtn.disabled = currentPage === 1 || totalPages === 0;
+    prevBtn.disabled = currentPage === 1 || totalPages === 0;
+    nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+    lastBtn.disabled = currentPage === totalPages || totalPages === 0;
+    
+    const pageNumbersDiv = document.getElementById('pageNumbers');
+    if (totalPages <= 1) {
+        pageNumbersDiv.innerHTML = '';
+        return;
+    }
+    
+    let pageNumbersHtml = '';
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, currentPage + 2);
+    
+    if (totalPages <= 5) {
+        startPage = 1;
+        endPage = totalPages;
+    } else {
+        if (startPage > 1) {
+            pageNumbersHtml += `<button class="page-number" data-page="1">1</button>`;
+            if (startPage > 2) pageNumbersHtml += `<span style="padding: 0 4px;">...</span>`;
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        pageNumbersHtml += `<button class="page-number ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    
+    if (totalPages > 5 && endPage < totalPages) {
+        if (endPage < totalPages - 1) pageNumbersHtml += `<span style="padding: 0 4px;">...</span>`;
+        pageNumbersHtml += `<button class="page-number" data-page="${totalPages}">${totalPages}</button>`;
+    }
+    
+    pageNumbersDiv.innerHTML = pageNumbersHtml;
+    
+    document.querySelectorAll('.page-number').forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentPage = parseInt(this.getAttribute('data-page'));
+            renderLogTable();
+            renderPagination();
+        });
+    });
+    
+    const jumpInput = document.getElementById('pageJumpInput');
+    jumpInput.max = totalPages || 1;
+    jumpInput.value = currentPage;
+}
+
+// ===============================
+// ESCAPE HTML UTILITY
+// ===============================
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// ===============================
+// SHOW ERROR STATE
+// ===============================
+function showErrorState() {
+    document.getElementById('totalValue').innerHTML = '<span style="color:#ef4444">Error</span>';
+    document.getElementById('upValue').innerHTML = '<span style="color:#ef4444">Error</span>';
+    document.getElementById('warningValue').innerHTML = '<span style="color:#ef4444">Error</span>';
+    document.getElementById('downValue').innerHTML = '<span style="color:#ef4444">Error</span>';
+    document.getElementById('percentValue').innerHTML = '0%';
+    
+    const progressFill = document.getElementById('progressFill');
+    progressFill.style.width = '0%';
+    progressFill.innerText = '0%';
+    progressFill.style.background = "linear-gradient(90deg, #ef4444, #dc2626)";
+}
+
+// ===============================
+// INITIALIZE
+// ===============================
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+    loadLogData();
+    
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(() => {
+        loadDashboardData();
+    }, 30000);
+    
+    if (logRefreshInterval) clearInterval(logRefreshInterval);
+    logRefreshInterval = setInterval(() => {
+        loadLogData();
+    }, 10000);
+    
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentLogFilter = this.getAttribute('data-filter');
+            currentPage = 1;
+            renderLogTable();
+            renderPagination();
+        });
+    });
+    
+    const perPageSelect = document.getElementById('perPageSelect');
+    perPageSelect.addEventListener('change', function() {
+        itemsPerPage = parseInt(this.value);
+        currentPage = 1;
+        renderLogTable();
+        renderPagination();
+    });
+    
+    const refreshBtn = document.getElementById('refreshLogBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            const originalHtml = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            loadLogData().finally(() => {
+                this.innerHTML = originalHtml;
+            });
+        });
+    }
+    
+    document.getElementById('firstPageBtn').addEventListener('click', function() {
+        currentPage = 1;
+        renderLogTable();
+        renderPagination();
+    });
+    
+    document.getElementById('prevPageBtn').addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            renderLogTable();
+            renderPagination();
+        }
+    });
+    
+    document.getElementById('nextPageBtn').addEventListener('click', function() {
+        let filteredLogs = allLogsData;
+        if (currentLogFilter !== 'all') {
+            filteredLogs = allLogsData.filter(log => {
+                const logStatus = (log.status || '').toUpperCase();
+                if (currentLogFilter === 'UP') return logStatus === 'UP';
+                if (currentLogFilter === 'WARNING') return logStatus === 'WARNING';
+                if (currentLogFilter === 'DOWN') return logStatus === 'DOWN';
+                return true;
+            });

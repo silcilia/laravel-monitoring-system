@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Monitoring System - DISKOMINFOTIK Provinsi Lampung</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        /* ================= SIDEBAR ================= */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Logo Image Styling - Bentuk Kotak di kiri */
+        .logo-image {
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 10px;
+            padding: 6px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+        
+        /* Fallback icon jika gambar tidak ditemukan */
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .logo-icon i {
+            font-size: 24px;
+            color: white;
+        }
+
+        /* Header Text - di samping kanan logo */
+        .header-text {
+            flex: 1;
+        }
+
+        .header-text h2 {
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .header-text span {
+            color: #3b82f6;
+            font-size: 0.7rem;
+            font-weight: 500;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* Navigation Menu */
+        .nav-menu {
+            flex: 1;
+            padding: 20px 12px;
+            list-style: none;
+        }
+
+        .nav-menu li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            margin-bottom: 4px;
+            border-radius: 10px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu li:hover {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            transform: translateX(4px);
+        }
+
+        .nav-menu li.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
+            color: #3b82f6;
+            border-right: 3px solid #3b82f6;
+        }
+
+        .nav-menu li i {
+            width: 22px;
+            font-size: 1rem;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: auto;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .user-info i {
+            font-size: 1.1rem;
+            color: #3b82f6;
+        }
+
+        .user-info span {
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            margin: 12px 0;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 10px;
+            color: #f87171;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .logout-btn i {
+            font-size: 0.9rem;
+        }
+
+        /* ================= MAIN CONTENT ================= */
+        .main {
+            margin-left: 280px;
+            padding: 20px 28px;
+            min-height: 100vh;
+            background: #f1f5f9;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .top-bar h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e293b, #1e3a5f);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin: 0;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .datetime {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 6px 12px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .refresh-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 10px;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        .refresh-btn:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+
+        /* Content Area */
+        #content {
+            animation: fadeInUp 0.4s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Modal Confirmation */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-confirm {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 380px;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .modal-header i {
+            font-size: 3rem;
+            color: white;
+            margin-bottom: 6px;
+        }
+
+        .modal-header h3 {
+            color: white;
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .modal-body p {
+            color: #475569;
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .modal-body .username {
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 10px;
+            display: block;
+            font-size: 1rem;
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .modal-btn {
+            padding: 8px 18px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        .modal-btn-cancel {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #e2e8f0;
+        }
+
+        .modal-btn-logout {
+            background: #ef4444;
+            color: white;
+        }
+
+        .modal-btn-logout:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 14px;
+            color: white;
+            z-index: 10001;
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        .notification-success { background: linear-gradient(135deg, #10b981, #059669); }
+        .notification-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .notification-info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .notification-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        /* Loading State */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px;
+            text-align: center;
+        }
+        .loading-state i {
+            font-size: 2rem;
+            color: #3b82f6;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+        .loading-state p {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            .header-text h2,
+            .header-text span,
+            .nav-menu span,
+            .user-info span,
+            .logout-btn span {
+                display: none;
+            }
+            .sidebar-header {
+                justify-content: center;
+                padding: 16px 0;
+            }
+            .logo-image {
+                width: 40px;
+                height: 40px;
+            }
+            .nav-menu li {
+                justify-content: center;
+                padding: 10px;
+            }
+            .nav-menu li i {
+                margin: 0;
+            }
+            .main {
+                margin-left: 70px;
+                padding: 14px;
+            }
+            .user-info {
+                justify-content: center;
+            }
+            .logout-btn {
+                justify-content: center;
+            }
+            .top-bar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            .top-bar h1 {
+                font-size: 1.1rem;
+            }
+            .datetime {
+                font-size: 0.65rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        <!-- LOGO GAMBAR - download.jpg bentuk kotak di kiri -->
+        <div class="logo-image">
+            <img src="{{ asset('storage/services/images/download.jpg') }}" alt="Logo DISKOMINFOTIK" 
+                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=logo-icon><i class=\'fas fa-chart-line\'></i></div>'">
+        </div>
+        <!-- Text di samping kanan logo -->
+        <div class="header-text">
+            <h2>DISKOMINFOTIK</h2>
+            <span>Provinsi Lampung</span>
+        </div>
+    </div>
+
+    <ul class="nav-menu">
+        <li onclick="window.location.href='{{ route('dashboard') }}'" data-page="dashboard" class="{{ request()->routeIs('dashboard*') ? 'active' : '' }}">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </li>
+
+        <li onclick="window.location.href='{{ route('services.index') }}'" data-page="services" class="{{ request()->routeIs('services*') ? 'active' : '' }}">
+            <i class="fas fa-server"></i>
+            <span>Services</span>
+        </li>
+
+        <li onclick="window.location.href='{{ route('contacts.index') }}'" data-page="contacts" class="{{ request()->routeIs('contacts*') ? 'active' : '' }}">
+            <i class="fas fa-address-book"></i>
+            <span>Contacts</span>
+        </li>
+
+        <li onclick="window.location.href='{{ route('power.index') }}'" data-page="power" class="{{ request()->routeIs('power*') ? 'active' : '' }}">
+            <i class="fas fa-bolt"></i>
+            <span>Power</span>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span id="username">{{ Auth::user()->name ?? 'Guest' }}</span>
+        </div>
+        <div class="divider"></div>
+        <div class="logout-btn" id="logoutButton">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+    <div class="top-bar">
+        <h1 id="pageTitle">@yield('page_title', 'Dashboard')</h1>
+        <div class="top-bar-actions">
+            <div class="datetime" id="datetime"></div>
+            <button class="refresh-btn" onclick="refreshCurrentPage()" title="Refresh">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="content">
+        @yield('content')
+    </div>
+</div>
+
+<!-- Modal Confirmation Logout -->
+<div id="logoutModal" class="modal-overlay" style="display: none;">
+    <div class="modal-confirm">
+        <div class="modal-header">
+            <i class="fas fa-sign-out-alt"></i>
+            <h3>Konfirmasi Logout</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin keluar dari sistem?</p>
+            <span class="username" id="modalUsername">{{ Auth::user()->name ?? 'Guest' }}</span>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn modal-btn-cancel" id="cancelLogoutBtn">
+                <i class="fas fa-times"></i> Batal
+            </button>
+            <button class="modal-btn modal-btn-logout" id="confirmLogoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ====================== -->
+<!-- GLOBAL SCRIPTS -->
+<!-- ====================== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+    (function() {
+        // ======================
+        // UPDATE DATE TIME
+        // ======================
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            };
+            const datetimeElem = document.getElementById('datetime');
+            if (datetimeElem) {
+                datetimeElem.innerHTML = now.toLocaleDateString('id-ID', options);
+            }
+        }
+
+        // ======================
+        // UPDATE PAGE TITLE
+        // ======================
+        function updatePageTitle() {
+            const path = window.location.pathname;
+            const pageTitleElem = document.getElementById('pageTitle');
+            if (pageTitleElem) {
+                // Jika halaman menggunakan yield page_title, sudah diatur dari server
+                // Ini hanya fallback jika ada perubahan via JS
+            }
+        }
+
+        // ======================
+        // REFRESH CURRENT PAGE
+        // ======================
+        window.refreshCurrentPage = function() {
+            location.reload();
+        };
+
+        // ======================
+        // LOGOUT MODAL FUNCTIONS
+        // ======================
+        function showLogoutModal() {
+            const modal = document.getElementById('logoutModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        function hideLogoutModal() {
+            const modal = document.getElementById('logoutModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // ======================
+        // LOGOUT FUNCTION
+        // ======================
+        function logoutUser() {
+            hideLogoutModal();
+            
+            function getCSRFToken() {
+                return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            }
+            
+            showNotification('Sedang logout...', 'info');
+            
+            fetch('/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCSRFToken()
+                },
+                credentials: 'same-origin'
+            })
+            .then(() => {
+                localStorage.clear();
+                showNotification('Berhasil logout! Sampai jumpa kembali.', 'success');
+                setTimeout(() => {
+                    window.location.href = '{{ route('login') }}';
+                }, 1000);
+            })
+            .catch(() => {
+                localStorage.clear();
+                window.location.href = '{{ route('login') }}';
+            });
+        }
+
+        // ======================
+        // TOKEN HELPERS
+        // ======================
+        window.getToken = function() {
+            return localStorage.getItem('access');
+        };
+
+        window.isAuthenticated = function() {
+            return !!window.getToken();
+        };
+
+        // ======================
+        // AUTH FETCH
+        // ======================
+        window.authFetch = function(url, options = {}) {
+            const token = window.getToken();
+            
+            if (!token && !url.includes('/login')) {
+                window.location.href = '{{ route('login') }}';
+                return Promise.reject(new Error('No token'));
+            }
+            
+            return fetch(url, {
+                ...options,
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+        };
+
+        // ======================
+        // ESCAPE HTML
+        // ======================
+        window.escapeHtml = function(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+
+        // ======================
+        // SHOW NOTIFICATION
+        // ======================
+        window.showNotification = function(message, type = 'success') {
+            const existingNotif = document.querySelectorAll('.notification');
+            existingNotif.forEach(notif => notif.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            
+            let icon = 'fa-check-circle';
+            if (type === 'error') icon = 'fa-exclamation-circle';
+            if (type === 'warning') icon = 'fa-exclamation-triangle';
+            if (type === 'info') icon = 'fa-info-circle';
+            
+            notification.innerHTML = `
+                <i class="fas ${icon}"></i>
+                <span>${window.escapeHtml(message)}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        };
+
+        // ======================
+        // SHOW LOADING
+        // ======================
+        window.showLoading = function(containerId) {
+            const container = document.getElementById(containerId || 'content');
+            if (container) {
+                const originalContent = container.innerHTML;
+                container.dataset.originalContent = originalContent;
+                container.innerHTML = `
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading...</p>
+                    </div>
+                `;
+            }
+        };
+
+        window.hideLoading = function(containerId) {
+            const container = document.getElementById(containerId || 'content');
+            if (container && container.dataset.originalContent) {
+                container.innerHTML = container.dataset.originalContent;
+                delete container.dataset.originalContent;
+            }
+        };
+
+        // ======================
+        // SETUP MODAL - CLICK OUTSIDE TO CLOSE
+        // ======================
+        function setupModal() {
+            const modal = document.getElementById('logoutModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        hideLogoutModal();
+                    }
+                });
+            }
+        }
+
+        // ======================
+        // ESCAPE KEY TO CLOSE MODAL
+        // ======================
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('logoutModal');
+                if (modal && modal.style.display === 'flex') {
+                    hideLogoutModal();
+                }
+            }
+        });
+
+        // ======================
+        // INITIALIZE
+        // ======================
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            updatePageTitle();
+            setupModal();
+            
+            // Setup logout button dengan event listener
+            const logoutBtn = document.getElementById('logoutButton');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showLogoutModal();
+                });
+            }
+            
+            // Setup modal buttons
+            const cancelBtn = document.getElementById('cancelLogoutBtn');
+            const confirmBtn = document.getElementById('confirmLogoutBtn');
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    hideLogoutModal();
+                });
+            }
+            
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    logoutUser();
+                });
+            }
+            
+            setInterval(updateDateTime, 1000);
+            
+            if (window.initPage && typeof window.initPage === 'function') {
+                window.initPage();
+            }
+        });
+    })();
+</script>
+
+</body>
+</html>
